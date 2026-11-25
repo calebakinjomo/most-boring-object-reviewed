@@ -6,6 +6,10 @@ everyday object to /output/entry.txt.
 The object: a dustpan. Its one job is to collect dust, yet every sweep
 ends the same way — a thin last line of dust escapes back onto the
 floor. The joke is the object's own dull failure, told straight.
+
+After writing, the program reads the file back and compares it byte
+for byte with the entry, so a partial or altered write can never pass
+silently as a valid submission.
 """
 
 import os
@@ -33,7 +37,15 @@ def main() -> int:
     os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
     with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
         f.write(ENTRY)
-    print(f"wrote {len(ENTRY)} chars to {OUTPUT_PATH}")
+
+    # Read-back verification: the file on disk must be byte-identical
+    # to the entry, with no trailing newline or extra whitespace added.
+    with open(OUTPUT_PATH, "r", encoding="utf-8") as f:
+        written = f.read()
+    if written != ENTRY:
+        print("read-back mismatch: /output/entry.txt != entry", file=sys.stderr)
+        return 1
+    print(f"wrote {len(ENTRY)} chars to {OUTPUT_PATH} (read-back verified)")
     return 0
 
 
